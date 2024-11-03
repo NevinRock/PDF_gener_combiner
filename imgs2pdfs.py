@@ -138,41 +138,46 @@ class PDFCombiner:
 
         return pdf_list
 
-    def PDF_combiner(self, pdf_name:str = None, count:str = 1, pdf_num:int = None):
+    def PDF_combiner(self, pdf_name: str = None, count: int = 1, pdf_num: int = None):
         if pdf_name is None:
             pdf_name = self.pdf_name
         else:
             self.pdf_name = pdf_name
 
-        pdf_list= self.file_legal_type(self.__file_list)
+        pdf_list = self.file_legal_type(self.__file_list)
         pdf_list = self.natural_sort_key(pdf_list)
 
+        output_dir = "media/PDF/Combined PDF"
+
+
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        pic_num_count = 0
         merger = PdfMerger()
 
-
-        if pdf_num is not None:
-            pic_num_count = 0
-            for pdf in pdf_list:
-                pic_num_count += 1
-                merger.append(f"media/PDF/{pdf}")
-
-                if pic_num_count == pdf_num:
-                    output_name = f"{self.pdf_name}_{str(count)}.pdf"
-                    output_path = f"media/PDF/Combined PDF/{output_name}"
-                    merger.write(output_path)
-                    count += 1
-                    pic_num_count = 0
+        for pdf in pdf_list:
+            pic_num_count += 1
+            merger.append(f"media/PDF/{pdf}")
 
 
+            if pdf_num is not None and pic_num_count == pdf_num:
+                self.write_merged_pdf(merger, count, output_dir)
+                count += 1
+                pic_num_count = 0
+                merger = PdfMerger()
 
 
+        if pic_num_count > 0:
+            self.write_merged_pdf(merger, count, output_dir)
 
-        else:
-            for pdf in pdf_list:
-                merger.append(f"media/PDF/{pdf}")
-            output_name = f"{self.pdf_name}_{str(count)}.pdf"
-            output_path = f"media/PDF/Combined PDF/{output_name}"
-            merger.write(output_path)
+        merger.close()
+
+    def write_merged_pdf(self, merger, count, output_dir):
+        output_name = f"{self.pdf_name}_{str(count)}.pdf"
+        output_path = os.path.join(output_dir, output_name)
+        merger.write(output_path)
+        print(f"Combined PDF generated: {output_name}")
 
 
 
