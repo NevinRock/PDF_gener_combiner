@@ -101,53 +101,78 @@ class PDFGener:
             print(f"\033[91mNo valid PDF generated\033[0m")
 
 
-    class PDFCombiner:
-        def __init__(self, file_list, pdf_name:str = 'CombinedPDF'):
-            self.__file_list = file_list
+class PDFCombiner:
+    def __init__(self, file_list, pdf_name:str = 'CombinedPDF'):
+        self.__file_list = file_list
+        self.pdf_name = pdf_name
+
+    @property
+    def file_list(self):
+        return self.__file_list
+
+    @file_list.setter
+    def file_list(self, file_list):
+        self.__file_list = file_list
+
+    @classmethod
+    def list_read(cls, dir: str = "media/PDF"):
+        file_list = os.listdir(dir)
+        sorted_file_list = cls.natural_sort_key(file_list)
+        return cls(sorted_file_list)
+
+    @staticmethod
+    def natural_sort_key(user_list):
+        return sorted(user_list,
+                      key=lambda s: [int(text) if text.isdigit() else text for text in re.split(r'(\d+)', s)])
+
+    @staticmethod
+    def file_legal_type(pdf_list):
+        legal_type = ('.pdf')
+
+        for pdf in pdf_list:
+            if pdf.endswith(legal_type):
+                pass
+            else:
+                pdf_list.remove(pdf)
+                print(f"\033[91mInvalid file type: {pdf}\033[0m")
+
+        return pdf_list
+
+    def PDF_combiner(self, pdf_name:str = None, count:str = 1, pdf_num:int = None):
+        if pdf_name is None:
+            pdf_name = self.pdf_name
+        else:
             self.pdf_name = pdf_name
 
-        @property
-        def file_list(self):
-            return self.__file_list
+        pdf_list= self.file_legal_type(self.__file_list)
+        pdf_list = self.natural_sort_key(pdf_list)
 
-        @file_list.setter
-        def file_list(self, file_list):
-            self.__file_list = file_list
+        merger = PdfMerger()
 
-        @classmethod
-        def list_read(cls, dir: str = "media/PDF"):
-            file_list = os.listdir(dir)
-            sorted_file_list = cls.natural_sort_key(file_list)
-            return cls(sorted_file_list)
 
-        @staticmethod
-        def natural_sort_key(user_list):
-            return sorted(user_list,
-                          key=lambda s: [int(text) if text.isdigit() else text for text in re.split(r'(\d+)', s)])
-
-        @staticmethod
-        def file_legal_type(pdf_list):
-            legal_type = ('.pdf')
-
+        if pdf_num is not None:
+            pic_num_count = 0
             for pdf in pdf_list:
-                if pdf.endswith(legal_type):
-                    pass
-                else:
-                    pdf_list.remove(pdf)
-                    print(f"\033[91mInvalid file type: {pdf}\033[0m")
+                pic_num_count += 1
+                merger.append(f"media/PDF/{pdf}")
 
-            return pdf_list
+                if pic_num_count == pdf_num:
+                    output_name = f"{self.pdf_name}_{str(count)}.pdf"
+                    output_path = f"media/PDF/Combined PDF/{output_name}"
+                    merger.write(output_path)
+                    count += 1
+                    pic_num_count = 0
 
-        def PDF_combiner(self, pdf_name:str = None, count:str = 1):
-            if pdf_name is None:
-                pdf_name = self.pdf_name
-            else:
-                self.pdf_name = pdf_name
 
-            merger = PdfMerger()
 
-            for pdf in pdf_files:
-                merger.append(pdf)
+
+
+        else:
+            for pdf in pdf_list:
+                merger.append(f"media/PDF/{pdf}")
+            output_name = f"{self.pdf_name}_{str(count)}.pdf"
+            output_path = f"media/PDF/Combined PDF/{output_name}"
+            merger.write(output_path)
 
 
 
@@ -155,5 +180,13 @@ class PDFGener:
 
 
 if __name__ == "__main__":
+    #gene pdf
     a = PDFGener.list_read()
-    a.gene_from_file("偶像の子", 131)
+    a.gene_from_file("偶像の子")
+    print('successful')
+
+
+
+    #combined pdf
+    a = PDFCombiner.list_read()
+    a.PDF_combiner("偶像の子",1,3)
