@@ -61,6 +61,11 @@ class PDFGener:
                 img = Image.open(f"media/Picture/{file_name}/{pic_dir}").convert("RGB")
                 images.append(img)
 
+            output_dir = "media/PDF"
+
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
             if images:
                 output_name = f"{self.pdf_name}_{str(count)}.pdf"
                 output_path = f"media/PDF/{output_name}"
@@ -178,11 +183,6 @@ class PDFCombiner:
         output_path = os.path.join(output_dir, output_name)
         merger.write(output_path)
         print(f"Combined PDF generated: {output_name}")
-
-
-
-
-
 
 if __name__ == "__main__":
     #gene pdf
